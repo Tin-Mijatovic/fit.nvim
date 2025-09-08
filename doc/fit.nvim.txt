@@ -1,0 +1,172 @@
+*fit.nvim.txt*	A simple Neovim plugin to remind you to take breaks and exercise.
+
+Version: 1.0.0
+Author: Tin Mijatovic
+License: MIT
+
+==============================================================================
+1. CONTENTS                                                 *fit.nvim-contents*
+    1. CONTENTS
+    2. INTRODUCTION                                         *fit.nvim-intro*
+    3. INSTALLATION                                         *fit.nvim-install*
+    4. CONFIGURATION                                        *fit.nvim-config*
+    5. USAGE                                                *fit.nvim-usage*
+    6. API                                                  *fit.nvim-api*
+
+==============================================================================
+2. INTRODUCTION                                             *fit.nvim-intro*
+
+Fit.nvim is a lightweight Neovim plugin designed to promote regular breaks and
+physical activity for users who spend long hours coding. It presents
+interactive prompts with exercise suggestions at configurable intervals,
+helping you stay active and healthy.
+
+Features:
+- Configurable primary reminder interval (in minutes).
+- Configurable snooze interval (in minutes).
+- Randomized exercise suggestions, ensuring all exercises are presented
+  before any repeat.
+- Interactive prompt for "Done" or "Postpone" actions.
+
+==============================================================================
+3. INSTALLATION                                             *fit.nvim-install*
+
+Install using your preferred Neovim plugin manager.
+
+Example with |lazy.nvim|:
+
+Place the following configuration in your `lua/config/plugins.lua`,
+`lua/plugins.lua`, or any file loaded by |lazy.nvim|.
+
+>lua
+  {
+    "Tin-Mijatovic/fit.nvim", -- Use the GitHub repository
+    lazy = false, -- CRUCIAL: Ensures the plugin loads at Neovim startup.
+    opts = {
+      interval_minutes = 10,        -- Required: Reminder interval in MINUTES (e.g., 10 minutes)
+      snooze_minutes = 0.05,        -- Required: Snooze interval in MINUTES (e.g., 0.05 minutes = 3 seconds)
+                                    -- Use fractions for seconds: 0.1 for 6s, 0.05 for 3s etc.
+
+      -- === USER DEFINED EXERCISES ===
+      -- Required: A table of exercises. Each entry needs a 'name' (string). 'description' (string) is optional.
+      exercises = {
+        { name = "Push-ups", description = "10-15 reps" },
+        { name = "Squats", description = "15-20 reps" },
+        { name = "Plank", description = "30-60 seconds" },
+        { name = "Lunges", description = "10-12 reps per leg" },
+        { name = "Wall Sit", description = "30-60 seconds" },
+        { name = "Stretching", description = "5 minutes, full body" },
+      },
+    },
+  },
+<
+
+Example with |packer.nvim|:
+
+>lua
+  use {
+    "Tin-Mijatovic/fit.nvim", -- Use the GitHub repository
+    config = function()
+      require("fit").setup({
+        interval_minutes = 10,
+        snooze_minutes = 0.05,
+        exercises = {
+          { name = "Push-ups", description = "10-15 reps" },
+          { name = "Squats", description = "15-20 reps" },
+        },
+      })
+    end,
+  }
+<
+
+Example with |vim-plug|:
+
+>vim
+  Plug 'Tin-Mijatovic/fit.nvim' " Use the GitHub repository
+
+  lua << EOF
+    require("fit").setup({
+      interval_minutes = 10,
+      snooze_minutes = 0.05,
+      exercises = {
+        { name = "Push-ups", description = "10-15 reps" },
+        { name = "Squats", description = "15-20 reps" },
+      },
+    })
+  EOF
+<
+
+==============================================================================
+4. CONFIGURATION                                            *fit.nvim-config*
+
+Fit.nvim is configured by passing an `opts` table to its `lazy.nvim` setup
+(or directly to `require("fit").setup()` for other managers).
+
+*   `interval_minutes` (number, **required**):
+    *   Sets the primary interval (in minutes) for exercise reminders.
+    *   Default: None (must be provided by user).
+    *   Example: `interval_minutes = 20` for a reminder every 20 minutes.
+
+*   `snooze_minutes` (number, **required**):
+    *   Sets the shorter interval (in minutes) for reminders when "Postpone"
+      is selected. Can use fractions for seconds.
+    *   Default: None (must be provided by user).
+    *   Example: `snooze_minutes = 0.1` for a 6-second snooze
+      (`0.1 * 60 = 6`).
+
+*   `exercises` (table, **required**):
+    *   A Lua table containing your custom list of exercises.
+    *   Each entry must be a table with:
+        *   `name` (string, **required**): The main name of the exercise.
+        *   `description` (string, *optional*): A short description, e.g.,
+          "10-15 reps" or "30 seconds".
+
+Example `opts` configuration:
+
+>lua
+opts = { -- This is the table you pass to setup()
+  interval_minutes = 15,       -- Remind every 15 minutes
+  snooze_minutes = 0.5,        -- Snooze for 30 seconds
+  exercises = {
+    { name = "Quick Stretch", description = "Upper body" },
+    { name = "Walk Around", description = "2 minutes" },
+  },
+},
+<
+
+==============================================================================
+5. USAGE                                                    *fit.nvim-usage*
+
+Once installed and configured, Fit.nvim automatically starts its reminder
+timer when Neovim launches.
+
+When an exercise reminder appears (using |vim.ui.select|):
+- **Done**: Select this when you've completed the exercise. The main timer
+  will restart for `interval_minutes`. A new exercise will be chosen for
+  the next reminder.
+- **Postpone**: Select this to delay the reminder. The timer will restart
+  for `snooze_minutes`. A new exercise will be chosen.
+- **Dismiss (e.g., pressing `<Esc>`):** The reminder timer will reset for
+  `interval_minutes`. A new exercise will be chosen.
+
+Exercise Cycling:
+The plugin ensures that each exercise in your configured list is presented
+at least once before any exercise is repeated. Once all exercises have been
+shown, the cycle resets, and a new random sequence begins.
+
+==============================================================================
+6. API                                                      *fit.nvim-api*
+
+Fit.nvim exposes a small set of public Lua functions for direct interaction.
+
+*   *fit.nvim.stop()* ~
+    `:lua require("fit").stop()`
+    Stops the currently active reminder timer. No more reminders will appear
+    until Neovim is restarted or `require("fit").setup()` is called again.
+
+*   *fit.nvim.remind()* ~
+    `:lua require("fit").remind()`
+    Immediately triggers an exercise reminder prompt, regardless of any
+    currently running timer.
+
+vim:tw=78:ts=8:ft=help:noet:
