@@ -102,6 +102,7 @@ The plugin is configured via the `opts` table (for `lazy.nvim`) or the table pas
   * A Lua table containing your list of exercises. Each entry in the table should be a table itself with:
     * `name` (string, **required**): The name of the exercise (e.g., "Push-ups").
     * `description` (string, *optional*): A brief description or rep count (e.g., "10-15 reps").
+* `randomize` (bool, **optional**):
 
 ### Example `opts` configuration
 
@@ -109,6 +110,7 @@ The plugin is configured via the `opts` table (for `lazy.nvim`) or the table pas
 opts = { -- This is the table you pass to setup()
   interval_minutes = 15,       -- Remind every 15 minutes
   snooze_minutes = 0.5,        -- Snooze for 30 seconds
+  randomize=true,              -- Optional: Randomize exercise order each cycle (default: false)
   exercises = {
     { name = "Quick Stretch", description = "Upper body" },
     { name = "Walk Around", description = "2 minutes" },

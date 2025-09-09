@@ -27,6 +27,14 @@ local function deepcopy(orig, seen)
 	return copy
 end
 
+-- Fisher–Yates shuffle
+local function shuffle(tbl)
+	for i = #tbl, 2, -1 do
+		local j = math.random(1, i)
+		tbl[i], tbl[j] = tbl[j], tbl[i]
+	end
+end
+
 -- Stop timer
 local function stop_timer()
 	if timer then
@@ -57,14 +65,16 @@ end
 local function get_next_exercise()
 	if #available_exercises == 0 then
 		available_exercises = deepcopy(exercises_list)
-		vim.notify("🔄 Fit.nvim: Restarting cycle!", vim.log.INFO, { title = "Fit.nvim" })
+		if M.randomize then
+			shuffle(available_exercises)
+		end
+		vim.notify("🔄 Fit.nvim: Restarting exercise cycle!", vim.log.INFO, { title = "Fit.nvim" })
 		if #exercises_list == 0 then
 			return { name = "No exercises configured!", description = "" }
 		end
 	end
-	local idx = math.random(1, #available_exercises)
-	local ex = available_exercises[idx]
-	table.remove(available_exercises, idx)
+
+	local ex = table.remove(available_exercises, 1) -- pick next in order
 	return ex
 end
 
@@ -125,7 +135,7 @@ local function show_lock_screen(seconds, exercise)
 
 	local function update(count)
 		local lines = {
-			" ⚠️Inputs are locked for " .. count .. " seconds ⚠️",
+			" ⚠️ Inputs are locked for " .. count .. " seconds ⚠️",
 			"FIT REMINDER",
 		}
 		vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
@@ -146,7 +156,6 @@ local function show_lock_screen(seconds, exercise)
 				countdown:stop()
 				countdown:close()
 				vim.api.nvim_win_close(win, true)
-				-- Show real select now
 				show_select(exercise)
 			end
 		end)
@@ -157,7 +166,7 @@ end
 function M.show_reminder()
 	stop_timer()
 	local ex = get_next_exercise()
-	show_lock_screen(5, ex) -- lock for 5 seconds, then show select
+	show_lock_screen(5, ex) -- lock 5s then show select
 end
 
 -- Init
@@ -171,8 +180,13 @@ function M.init(opts)
 		exercises_list = { { name = "Take a break", description = "Stand and move" } }
 	end
 
+	M.randomize = opts.randomize or false
+
 	math.randomseed(os.time())
 	available_exercises = deepcopy(exercises_list)
+	if M.randomize then
+		shuffle(available_exercises)
+	end
 
 	vim.notify(
 		"🏋️ Fit.nvim active. Next reminder in " .. (M.current_reminder_interval_ms / 1000 / 60) .. " minutes.",
