@@ -28,7 +28,7 @@ Install with your favorite plugin manager.
 -- In your plugins/init.lua, or a dedicated local plugins file like lua/config/plugins/fit.lua
 return {
   {
-    "Tin-Mijatovic/fit.nvim", -- Use your GitHub repository directly
+    "Tin-Mijatovic/fit.nvim",
     lazy = false, -- CRUCIAL: Ensures the plugin loads at Neovim startup.
     opts = {
       interval_minutes = 10,        -- Required: Reminder interval in MINUTES (e.g., 10 minutes)
@@ -50,7 +50,7 @@ return {
 ```lua
 -- In your init.lua or lua/plugins.lua
 use {
-  "Tin-Mijatovic/fit.nvim", -- Use your GitHub repository directly
+  "Tin-Mijatovic/fit.nvim",
   config = function()
     require("fit").setup({
       interval_minutes = 10,
@@ -71,7 +71,7 @@ use {
 
 ```vim
 " In your init.vim or .vimrc
-Plug 'Tin-Mijatovic/fit.nvim' " Use your GitHub repository directly
+Plug 'Tin-Mijatovic/fit.nvim'
 
 lua << EOF
   require("fit").setup({
@@ -103,6 +103,7 @@ The plugin is configured via the `opts` table (for `lazy.nvim`) or the table pas
     * `name` (string, **required**): The name of the exercise (e.g., "Push-ups").
     * `description` (string, *optional*): A brief description or rep count (e.g., "10-15 reps").
 * `randomize` (bool, **optional**):
+  * Randomizes the order of exercises each cycle. Default is `false`.
 
 ### Example `opts` configuration
 
