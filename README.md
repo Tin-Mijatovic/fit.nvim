@@ -17,6 +17,11 @@ Fit.nvim presents you with a random exercise reminder at a configurable interval
 * **Randomized Exercises:** Presents a different exercise each time until all are shown, then restarts the cycle.
 * **Interactive Prompt:** Uses `vim.ui.select` for a clear, central reminder.
 * **Lightweight:** Pure Lua, minimal dependencies (just Neovim's built-in `vim.uv`/`vim.loop` and `vim.ui.select`).
+* **Analytics Dashboard:** View exercise history and stats with period-based filtering (Day/Week/Month/Year).
+* **Exercise Tracking:** Records which exercises you've completed and how many times.
+* **Anti-Spam Protection:** Notifications replace each other and skip when you're idle.
+* **Persistent Stats:** Saves analytics to JSON file across Neovim sessions.
+* **Anti-spam:** Reminders replace previous notifications (no stacking) and skip when user is idle.
 
 ## 🚀 Installation
 
@@ -102,8 +107,32 @@ The plugin is configured via the `opts` table (for `lazy.nvim`) or the table pas
   * A Lua table containing your list of exercises. Each entry in the table should be a table itself with:
     * `name` (string, **required**): The name of the exercise (e.g., "Push-ups").
     * `description` (string, *optional*): A brief description or rep count (e.g., "10-15 reps").
-* `randomize` (bool, **optional**):
+* `randomize` (bool, *optional*):
   * Randomizes the order of exercises each cycle. Default is `false`.
+* `lock_seconds` (number, *optional*):
+  * Duration of lock screen (in seconds) before showing exercise selection prompt. Default is `5`.
+  * Set to `0` to disable the lock screen entirely.
+* `notification_level` (string, *optional*):
+  * Controls verbosity of notifications. Options: `"error"`, `"warning"`, `"info"`, `"debug"`.
+  * Default is `"info"`. Use `"error"` to minimize notifications or `"debug"` for maximum verbosity.
+* `log_file_path` (string, *optional*):
+  * Path to JSON file where analytics and exercise history are saved.
+  * Default is `~/.local/share/nvim/fit_stats.json` (platform-dependent).
+  * If not specified, uses Neovim's standard data directory.
+* `idle_check_minutes` (number, *optional*):
+  * Skip reminders if user has been inactive for this many minutes (anti-spam protection).
+  * Default is `0` (disabled). Set to `30` to skip reminders when idle for 30+ minutes.
+  * Useful when away from computer for extended periods.
+* `log_file_path` (string, *optional*):
+  * Path to the JSON file where analytics and exercise history are saved.
+  * Default is `~/.local/share/nvim/fit_stats.json` (platform-dependent).
+  * If not specified, uses Neovim's standard data directory.
+* `lock_seconds` (number, *optional*):
+  * Duration of the lock screen (in seconds) before showing the exercise selection prompt. Default is `5`.
+  * Set to `0` to disable the lock screen.
+* `notification_level` (string, *optional*):
+  * Controls the verbosity of notifications. Options: `"error"`, `"warning"`, `"info"`, `"debug"`. Default is `"info"`.
+  * Use `"error"` to minimize notifications, or `"debug"` for maximum verbosity.
 
 ### Example `opts` configuration
 
@@ -138,12 +167,55 @@ The plugin ensures that each exercise in your configured list is presented
 at least once before any exercise is repeated. Once all exercises have been
 shown, the cycle resets, and a new random sequence begins.
 
+### Stats Tracking & Analytics
+
+Fit.nvim tracks your exercise habits and provides two views:
+
+**Session Stats** (`:FitStats`):
+* Total reminders shown
+* Exercises completed/postponed/dismissed
+* Completion rate percentage
+* Reset when you restart Neovim
+
+**Analytics Dashboard** (`:FitLog`):
+* Period-based stats (Day/Week/Month/Year/All)
+* Exercise history with timestamps
+* Top exercises completed (with visual bar charts)
+* Persistent across Neovim sessions (saved to JSON)
+* Tab-based navigation (Tab = next, Shift+Tab = previous)
+* Anti-spam protection (skips reminders when idle)
+
+**Dashboard Features:**
+* 📊 Completion rate donut chart
+* 📈 Progress bar (visual ████████░░░░░)
+* 💪 Top 10 exercises sorted by completion count
+* 📋 Recent activity log
+* 📖 Help tab with all commands
+* ⌨️ Navigation: Tab to cycle periods, q/Esc to close
+
+**Usage:**
+```vim
+:FitLog
+```
+Then press Tab to switch between periods (Day → Week → Month → Year → All)
+
+### Commands
+
+The plugin provides several commands for easier interaction:
+
+* `:FitToggle`: Start or stop the reminder timer (toggle on/off)
+* `:FitStats`: Display statistics about your exercise habits
+* `:FitStop`: Stop the reminder timer completely
+* `:FitRemind`: Immediately trigger an exercise reminder, regardless of the active timer
+
 ### API Commands (for advanced users/debugging)
 
-You can interact with the plugin using Lua commands:
+You can also interact with the plugin using Lua commands:
 
 * `:lua require("fit").stop()`: Stops the reminder timer completely.
+* `:lua require("fit").toggle()`: Start or stop the reminder timer.
 * `:lua require("fit").remind()`: Immediately triggers an exercise reminder, regardless of the active timer.
+* `:lua require("fit").show_stats()`: Display statistics about your exercise habits.
 
 ## 🤝 Contributing
 

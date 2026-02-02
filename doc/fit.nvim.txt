@@ -4,14 +4,16 @@ Version: 1.0.0
 Author: Tin Mijatovic
 License: MIT
 
-==============================================================================
+ ==============================================================================
 1. CONTENTS                                                 *fit.nvim-contents*
     1. CONTENTS
     2. INTRODUCTION                                         *fit.nvim-intro*
     3. INSTALLATION                                         *fit.nvim-install*
     4. CONFIGURATION                                        *fit.nvim-config*
-    5. USAGE                                                *fit.nvim-usage*
-    6. API                                                  *fit.nvim-api*
+     5. USAGE                                                *fit.nvim-usage*
+     6. ANALYTICS                                           *fit.nvim-analytics*
+     7. COMMANDS                                              *fit.nvim-commands*
+     8. API                                                  *fit.nvim-api*
 
 ==============================================================================
 2. INTRODUCTION                                             *fit.nvim-intro*
@@ -114,12 +116,42 @@ Fit.nvim is configured by passing an `opts` table to its `lazy.nvim` setup
     *   Example: `snooze_minutes = 0.1` for a 6-second snooze
       (`0.1 * 60 = 6`).
 
-*   `exercises` (table, **required**):
-    *   A Lua table containing your custom list of exercises.
-    *   Each entry must be a table with:
-        *   `name` (string, **required**): The main name of the exercise.
-        *   `description` (string, *optional*): A short description, e.g.,
-          "10-15 reps" or "30 seconds".
+ *   `exercises` (table, **required**):
+     *   A Lua table containing your custom list of exercises.
+     *   Each entry must be a table with:
+         *   `name` (string, **required**): The main name of the exercise.
+         *   `description` (string, *optional*): A short description, e.g.,
+           "10-15 reps" or "30 seconds".
+
+*   `lock_seconds` (number, *optional*):
+    *   Duration of lock screen (in seconds) before showing exercise
+        selection prompt.
+    *   Default: `5`. Set to `0` to disable the lock screen.
+
+*   `idle_check_minutes` (number, *optional*):
+    *   Skip reminders if user has been inactive (no cursor movement or
+      buffer changes) for this many minutes.
+    *   Useful when away from computer for extended periods.
+    *   Default: `0` (disabled). Example: `30` to skip reminders when idle for
+      30+ minutes.
+
+*   `log_file_path` (string, *optional*):
+    *   Path to JSON file where analytics and exercise history are saved.
+    *   Default is platform-dependent Neovim data directory with `fit_stats.json`.
+    *   Example: `log_file_path = "~/.local/share/nvim/fit.json"`.
+
+*   `notification_level` (string, *optional*):
+    *   Controls verbosity of notifications. Options: `"error"`, `"warning"`, `"info"`,
+      `"debug"`.
+    *   Default: `"info"`. Use `"error"` to minimize notifications or `"debug"` for
+      maximum verbosity.
+     *   Example: `lock_seconds = 3` for a 3-second lock screen.
+
+ *   `notification_level` (string, *optional*):
+     *   Controls verbosity of notifications.
+     *   Default: `"info"`.
+     *   Options: `"error"`, `"warning"`, `"info"`, `"debug"`.
+     *   Example: `notification_level = "warning"` for fewer notifications.
 
 Example `opts` configuration:
 
@@ -154,19 +186,88 @@ The plugin ensures that each exercise in your configured list is presented
 at least once before any exercise is repeated. Once all exercises have been
 shown, the cycle resets, and a new random sequence begins.
 
-==============================================================================
-6. API                                                      *fit.nvim-api*
+=============================================================================
+6. ANALYTICS                                               *fit.nvim-analytics*
 
-Fit.nvim exposes a small set of public Lua functions for direct interaction.
+Fit.nvim provides an analytics dashboard accessible via `:FitLog` command with
+period-based statistics and exercise history.
+
+Features:
+    * Period-based filtering: Day, Week, Month, Year, All
+    * Completion rate donut chart visualization (⚪, ◐, ◑, ◒, ⚫)
+    * Progress bar using Unicode blocks (██████████░░░░░)
+    * Top 10 exercises sorted by completion count with visual bars
+    * Recent activity log with timestamps and action icons
+    * Tab-based navigation: Tab (next), Shift+Tab (previous)
+    * Help tab with all commands and keyboard shortcuts
+    * Persistent storage: Saves to JSON file across sessions
+
+Usage:
+    * Open with `:FitLog` or `:fitLog`
+    * Press Tab to cycle through periods
+    * Press q or <Esc> to close
+
+Note: Analytics are reset when Neovim is restarted unless configured with
+`log_file_path` for persistence.
+
+=============================================================================
+7. COMMANDS                                                *fit.nvim-commands*
+
+The plugin provides several commands for easier interaction. All commands have
+lowercase aliases for convenience (e.g., `:fitlog` works same as `:FitLog`).
+
+*   *:FitToggle* ~
+    `:FitToggle`
+    Starts or stops the reminder timer (toggle on/off).
+
+*   *:FitStats* ~
+    `:FitStats`
+    Displays statistics about your exercise habits, including:
+        - Total reminders shown
+        - Exercises completed (Done)
+        - Exercises postponed (Postpone)
+        - Exercises dismissed (Esc/Dismiss)
+        - Completion rate percentage
+
+    Stats are reset when Neovim is restarted.
+
+*   *:FitStop* ~
+    `:FitStop`
+    Stops the reminder timer completely. Same as `:lua require("fit").stop()`.
+
+*   *:FitRemind* ~
+    `:FitRemind`
+    Immediately triggers an exercise reminder, regardless of any currently
+    running timer. Same as `:lua require("fit").remind()`.
+
+=============================================================================
+7. API                                                      *fit.nvim-api*
+
+Fit.nvim exposes a set of public Lua functions for direct interaction.
 
 *   *fit.nvim.stop()* ~
     `:lua require("fit").stop()`
     Stops the currently active reminder timer. No more reminders will appear
     until Neovim is restarted or `require("fit").setup()` is called again.
 
+*   *fit.nvim.toggle()* ~
+    `:lua require("fit").toggle()`
+    Starts or stops the reminder timer. Same as `:FitToggle` command.
+
 *   *fit.nvim.remind()* ~
     `:lua require("fit").remind()`
     Immediately triggers an exercise reminder prompt, regardless of any
     currently running timer.
+
+*   *fit.nvim.show_stats()* ~
+    `:lua require("fit").show_stats()`
+    Displays statistics window showing total reminders, completed exercises,
+    postponed exercises, dismissed exercises, and completion rate.
+    Same as `:FitStats` command.
+
+*   *fit.nvim.show_log()* ~
+    `:lua require("fit").show_log()`
+    Opens analytics dashboard with period-based exercise history.
+    Same as `:FitLog` command.
 
 vim:tw=78:ts=8:ft=help:noet:
